@@ -7,6 +7,7 @@ module Trailblazer
   class Options
     def initialize(*containers)
       @mutable_options = {}
+      @containers      = containers
       @resolver        = Resolver.new(@mutable_options, *containers)
     end
 
@@ -22,12 +23,23 @@ module Trailblazer
     # Options from ::call (e.g. "user.current"), containers, etc.
     # NO mutual data from the caller operation. no class state.
     def to_runtime_data
-      @resolver.instance_variable_get(:@containers).slice(1..-2)
+      @containers.slice(1..-2)
     end
 
-    # THIS METHOD IS CONSIDERED PRIVATE AND MIGHT BE REMOVED.
+    # Returns all data that has been written to this object via Options#[]= since
+    # its instantiation.
     def to_mutable_data
       @mutable_options
+    end
+
+    # Returns the list of data that was passed to the constructor and hence was readable,
+    # but not writeable.
+    def to_containers
+      @containers
+    end
+
+    def to_options
+      self.class.new(*@containers)
     end
 
     # Called when Ruby transforms options into kw args, via **options.
