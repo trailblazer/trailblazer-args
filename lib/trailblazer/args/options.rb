@@ -38,7 +38,8 @@ module Trailblazer
       @containers
     end
 
-    def to_options
+    def to_options(proc=nil)
+      raise if proc
       self.class.new(*@containers)
     end
 

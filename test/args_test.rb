@@ -25,5 +25,12 @@ class ArgsTest < Minitest::Spec
     #-
 
     args.to_options.inspect.must_equal %{<Skill {} {:repository=>\"User\"}>}
+
+    options = args.to_options ->(mutable_data:, immutable_data:) do
+      immutable_data.merge(
+        modelFromOutside: mutable_data[:model]
+      )
+    end
+    options.inspect.must_equal %{}
   end
 end
