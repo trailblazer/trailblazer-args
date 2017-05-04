@@ -1,9 +1,42 @@
+# "di" step_di: order:  1. runtime, 2. { contract.class: A } (dynamic at runtime?)
+
+
 # TODO: mark/make all but mutable_options as frozen.
 # The idea of Skill is to have a generic, ordered read/write interface that
 # collects mutable runtime-computed data while providing access to compile-time
 # information.
 # The runtime-data takes precedence over the class data.
 module Trailblazer
+  # Holds local options (aka `mutable_options`) and "original" options from the "outer"
+  # activity (aka wrapped_options).
+  class Context # :data object:
+    def initialize(wrapped_options)
+      @mutable_options, @wrapped_options = {}, wrapped_options
+    end
+
+    def [](name)
+      @mutable_options[name] || @wrapped_options[name]
+    end
+
+    def []=(name, value)
+      @mutable_options[name] = value
+    end
+
+    # Return the Context's two components. Used when computing the new output for
+    # the next activity.
+    def decompose
+      # it would be cool if that could "destroy" the original object.
+      # also, if those hashes were immutable, that'd be amazing.
+      [ @mutable_options, @wrapped_options ]
+    end
+
+    # Context object as a new activity input. Optional new_hash
+    Input = ->(original_ctx, new_hash={}, &block) do
+
+    end
+  end
+
+
   class Options
     def initialize(*containers)
       @mutable_options = {}
@@ -22,6 +55,7 @@ module Trailblazer
     # THIS METHOD IS CONSIDERED PRIVATE AND MIGHT BE REMOVED.
     # Options from ::call (e.g. "user.current"), containers, etc.
     # NO mutual data from the caller operation. no class state.
+    # --------==> this always returned an array of "hashes".
     def to_runtime_data
       @containers.slice(1..-2)
     end
