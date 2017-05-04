@@ -32,6 +32,18 @@ module Trailblazer
       [ @wrapped_options, @mutable_options ]
     end
 
+    # TODO: massive performance bottleneck. also, we could already "know" here what keys the
+    # transformation wants.
+    def to_hash
+      {}.tap do |hash|
+        # arr = to_runtime_data << to_mutable_data << tmp_options
+
+        # the "key" here is to call to_hash on all containers.
+        [ @wrapped_options.to_hash, @mutable_options.to_hash ].each do |options|
+          options.each { |k, v| hash[k.to_sym] = v }
+        end
+      end
+    end
 
     def self.Build(wrapped_options, mutable_options={})
       wrapped_options = yield(wrapped_options, mutable_options) if block_given?

@@ -3,8 +3,10 @@ require "test_helper"
 class ArgsTest < Minitest::Spec
   Context = Trailblazer::Context
 
+  let (:immutable) { { repository: "User" } }
+
   it do
-    immutable = { repository: "User" }
+    immutable = self.immutable
 
     ctx = Context::Build(immutable)
 
@@ -53,6 +55,25 @@ class ArgsTest < Minitest::Spec
     # options.inspect.must_equal %{}
   end
 
+  #- #to_hash
+  it do
+    ctx = Context::Build( immutable )
+
+    ctx.to_hash.must_equal( { repository: "User" } )
+
+    # last added has precedence.
+    # only symbol keys.
+    # it {  }
+    ctx[:a] =Symbol
+    ctx["a"]=String
+    ctx.to_hash.must_equal({ :repository=>"User", :a=>String })
+  end
+
+
+
+
+
+  #-
   it do
     immutable = { repository: "User", model: Module, current_user: Class }
 
@@ -61,7 +82,6 @@ class ArgsTest < Minitest::Spec
     end
   end
 end
-
 
 def MyStep( bla: A )
     my_step = ->(options, **) { bla }
