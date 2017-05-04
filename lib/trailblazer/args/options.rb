@@ -9,6 +9,8 @@
 module Trailblazer
   # Holds local options (aka `mutable_options`) and "original" options from the "outer"
   # activity (aka wrapped_options).
+
+  # only public creator: Build
   class Context # :data object:
     def initialize(wrapped_options)
       @mutable_options, @wrapped_options = {}, wrapped_options
@@ -27,7 +29,13 @@ module Trailblazer
     def decompose
       # it would be cool if that could "destroy" the original object.
       # also, if those hashes were immutable, that'd be amazing.
-      [ @mutable_options, @wrapped_options ]
+      [ @wrapped_options, @mutable_options ]
+    end
+
+
+    def self.Build(wrapped_options, mutable_options={})
+      wrapped_options = yield(wrapped_options, mutable_options) if block_given?
+      new(wrapped_options)
     end
 
     # Context object as a new activity input. Optional new_hash
