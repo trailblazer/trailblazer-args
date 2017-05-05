@@ -6,59 +6,50 @@ class ArgsTest < Minitest::Spec
   let (:immutable) { { repository: "User" } }
 
   it do
-    immutable = self.immutable
+    ctx = Trailblazer::Context(immutable)
 
-    ctx = Context::Build(immutable)
-
-        # it {  }
-        #-
-        # options[] and options[]=
-        ctx[:model] = Module
-        ctx[:model].must_equal Module
+    # it {  }
+    #-
+    # options[] and options[]=
+    ctx[:model]    = Module
+    ctx[:contract] = Integer
+    ctx[:model]   .must_equal Module
+    ctx[:contract].must_equal Integer
 
     # it {  }
     immutable.inspect.must_equal %{{:repository=>\"User\"}}
-    # it {  }
-    ctx.decompose.must_equal [ {:repository=>"User"}, { :model=>Module } ]
+
+
 
     # strip mutable, build new one
-    new_ctx = Context::Build(*ctx.decompose) do |original, mutable| # both structures should be read-only
+    _original, _mutable = nil, nil
+
+    new_ctx = ctx.Unwrap do |original, mutable| # both structures should be read-only
+      _original, _mutable = original, mutable
+
       original.merge( a: mutable[:model] )
     end # this is our output, what do we want to tell the outer world?
 
-        new_ctx[:current_user] = Class
-        new_ctx[:current_user].must_equal Class
+    # it {  }
+    _original.must_equal({:repository=>"User"})
+    _mutable.must_equal({model: Module, contract: Integer})
+
+    new_ctx[:current_user] = Class
+    new_ctx[:current_user].must_equal Class
 
      # it {  }
     immutable.inspect.must_equal %{{:repository=>\"User\"}}
-    ctx.decompose.must_equal [ {:repository=>"User"}, { :model=>Module } ]
+    ctx.to_hash.must_equal( {:repository=>"User", :model=>Module, contract: Integer } )
+
     # it {  }
-    new_ctx.decompose.must_equal [ { :repository=>"User", a: Module }, { current_user: Class } ]
-
-    # #-
-    # # options.to_mutable_data
-    # args.to_mutable_data.inspect.must_equal %{{:model=>Module}}
-
-    # #-
-    # # options.to_immutable_data
-    # args.to_containers.inspect.must_equal %{[{:repository=>\"User\"}]}
-
-    # #-
-
-    # args.to_options.inspect.must_equal %{<Skill {} {:repository=>\"User\"}>}
-
-    # options = args.to_options ->(mutable_data:, immutable_data:) do
-    #   immutable_data.merge(
-    #     modelFromOutside: mutable_data[:model]
-    #   )
-    # end
-    # options.inspect.must_equal %{}
+    new_ctx.to_hash.must_equal({ :repository=>"User", a: Module, current_user: Class })
   end
 
   #- #to_hash
   it do
-    ctx = Context::Build( immutable )
+    ctx = Trailblazer::Context( immutable )
 
+    # it {  }
     ctx.to_hash.must_equal( { repository: "User" } )
 
     # last added has precedence.
@@ -66,6 +57,7 @@ class ArgsTest < Minitest::Spec
     # it {  }
     ctx[:a] =Symbol
     ctx["a"]=String
+
     ctx.to_hash.must_equal({ :repository=>"User", :a=>String })
   end
 
@@ -77,7 +69,7 @@ class ArgsTest < Minitest::Spec
   it do
     immutable = { repository: "User", model: Module, current_user: Class }
 
-    ctx = Context::Build(immutable) do |original, mutable|
+    ctx = Trailblazer::Context(immutable) do |original, mutable|
       mutable
     end
   end

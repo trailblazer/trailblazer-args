@@ -1,5 +1,18 @@
 # "di" step_di: order:  1. runtime, 2. { contract.class: A } (dynamic at runtime?)
 
+=begin
+  * test "stripe scenario"
+    def pay!(options, stripe: Stripe.new) # can be overridden in e.g. test via runtime dependencies or container.
+  * problem: HOW TO payment.stripe.engine ? step M, underscore_dots: true
+  * Create["payment.stripe.engine"] = Stripe.new
+
+=end
+
+=begin
+* In an operation, there's always a Context object that holds the Containers and the initial mutable data.
+* SIMPLE/CURRENT WAY: we can simply pass this on without wrapping (no boundaries)
+  * wrap for Nested, unwrap after Nested
+=end
 
 # TODO: mark/make all but mutable_options as frozen.
 # The idea of Skill is to have a generic, ordered read/write interface that
@@ -45,15 +58,22 @@ module Trailblazer
       end
     end
 
-    def self.Build(wrapped_options, mutable_options={})
-      wrapped_options = yield(wrapped_options, mutable_options) if block_given?
-      new(wrapped_options)
-    end
 
     # Context object as a new activity input. Optional new_hash
     Input = ->(original_ctx, new_hash={}, &block) do
 
     end
+
+    def Unwrap
+      wrapped_options, mutable_options = *decompose
+      wrapped_options = yield(wrapped_options, mutable_options) if block_given?
+
+      Trailblazer::Context(wrapped_options)
+    end
+  end
+
+  def self.Context(wrapped_options)
+    Context.new(wrapped_options)
   end
 
 
