@@ -64,7 +64,7 @@ module Trailblazer
 
     end
 
-    def Unwrap
+    def Build
       wrapped_options, mutable_options = *decompose
       wrapped_options = yield(wrapped_options, mutable_options) if block_given?
 

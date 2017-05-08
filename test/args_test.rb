@@ -24,7 +24,7 @@ class ArgsTest < Minitest::Spec
     # strip mutable, build new one
     _original, _mutable = nil, nil
 
-    new_ctx = ctx.Unwrap do |original, mutable| # both structures should be read-only
+    new_ctx = ctx.Build do |original, mutable| # both structures should be read-only
       _original, _mutable = original, mutable
 
       original.merge( a: mutable[:model] )
@@ -34,6 +34,7 @@ class ArgsTest < Minitest::Spec
     _original.must_equal({:repository=>"User"})
     _mutable.must_equal({model: Module, contract: Integer})
 
+    # writing to new doesn't change anything else
     new_ctx[:current_user] = Class
     new_ctx[:current_user].must_equal Class
 
